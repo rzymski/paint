@@ -124,27 +124,17 @@ class DrawingApp:
     def update_label(self, screen_height):
         if self.draw_type.get() == 'line':
             self.label.config(text="Wybrano rysowanie linii")
-            self.update_line_label_and_input(screen_height)
+            self.update_line_and_rectangle_label_and_input(screen_height)
         elif self.draw_type.get() == 'rectangle':
             self.label.config(text="Wybrano rysowanie prostokąta")
-            self.update_rectangle_label_and_input(screen_height)
+            self.update_line_and_rectangle_label_and_input(screen_height)
         elif self.draw_type.get() == 'circle':
             self.label.config(text="Wybrano rysowanie koła")
             self.update_circle_label_and_input(screen_height)
         else:
             self.label.config(text="Nie wybrano figury do rysowania")
 
-    def update_line_label_and_input(self, screen_height):
-        self.label_width.config(text="X2:")
-        self.label_height.config(text="Y2:")
-        self.label_width.place(x=403, y=screen_height - 150)
-        self.label_height.place(x=403, y=screen_height - 130)
-        self.param_width.place(x=425, y=screen_height-150)
-        self.param_height.place(x=425, y=screen_height-130)
-        self.label_radius.place_forget()
-        self.param_radius.place_forget()
-
-    def update_rectangle_label_and_input(self, screen_height):
+    def update_line_and_rectangle_label_and_input(self, screen_height):
         self.label_width.config(text="Width:")
         self.label_height.config(text="Height:")
         self.label_width.place(x=384, y=screen_height - 150)
