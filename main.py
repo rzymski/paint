@@ -28,11 +28,12 @@ class DrawingApp:
     def startDraw(self, event):
         x, y = event.x, event.y
         shapes = self.canvas.find_overlapping(x-1, y-1, x+1, y+1)
-        if shapes and self.selected_shape:
+        if shapes and self.selected_shape and shapes[-1] == self.selected_shape:
             #print("Kliknieto zaznaczony obiekt. Zmienia rozmiar")
             self.current_shape = shapes[-1]
         elif shapes:
             #print("Kliknieto obiekt do przesuniecia. Przesuwa.")
+            self.unmarkShape(self.selected_shape)
             self.selected_shape = shapes[-1]
             self.offset_x = x - self.canvas.coords(self.selected_shape)[0]
             self.offset_y = y - self.canvas.coords(self.selected_shape)[1]
@@ -50,6 +51,7 @@ class DrawingApp:
 
     def draw(self, event):
         x, y = event.x, event.y
+        shapes = self.canvas.find_overlapping(x - 1, y - 1, x + 1, y + 1)
         if self.selected_shape and self.current_shape:
             #print("Zmien rozmiar obecnie zaznaczonej figury")
             if self.canvas.type(self.current_shape) == "line":
@@ -78,19 +80,23 @@ class DrawingApp:
                 else:
                     new_width = new_height
                 self.canvas.coords(self.current_shape, center_x - new_width / 2, center_y - new_height / 2, center_x + new_width / 2, center_y + new_height / 2)
+            self.fillParamResizeInput(self.current_shape)
         elif self.selected_shape:
             #print("Przesun figure")
+            self.unmarkShape(None)
             self.canvas.coords(self.selected_shape, x - self.offset_x, y - self.offset_y, x - self.offset_x + self.canvas.coords(self.selected_shape)[2] - self.canvas.coords(self.selected_shape)[0], y - self.offset_y + self.canvas.coords(self.selected_shape)[3] - self.canvas.coords(self.selected_shape)[1])
         elif self.current_shape:
-            #print("Zmien rozmiar nowej figury")
+            #print("Rysuj nowa figure")
             if self.draw_type.get() == "circle":
                 radius = max(abs(x - self.start_x), abs(y - self.start_y))
                 self.canvas.coords(self.current_shape, self.start_x - radius, self.start_y - radius, self.start_x + radius, self.start_y + radius)
             else:
                 self.canvas.coords(self.current_shape, self.start_x, self.start_y, x, y)
+            self.fillParamResizeInput(self.current_shape)
 
     def endDraw(self, event):
         #print("Puszczono")
+        self.unmarkShape(None)
         self.colorBorder(self.selected_shape, "black")
         self.selected_shape = None
         self.colorBorder(self.current_shape, "black")
@@ -121,6 +127,7 @@ class DrawingApp:
                 print("Selected shape is of an unknown type.")
 
     def markShape(self, event):
+        self.unmarkShape(self.selected_shape)
         x, y = event.x, event.y
         shapes = self.canvas.find_overlapping(x - 1, y - 1, x + 1, y + 1)
         if shapes:
@@ -137,27 +144,43 @@ class DrawingApp:
                     self.label_resize_height.place(x=640, y=self.screen_height - 170)
                     self.param_resize_width.place(x=725, y=self.screen_height - 190)
                     self.param_resize_height.place(x=725, y=self.screen_height - 170)
-                    print("OK1")
                 elif self.canvas.type(self.selected_shape) == "oval":
-                    print("OK2")
                     self.label_resize_radius.config(text="Resized Radius:")
                     self.label_resize_radius.place(x=640, y=self.screen_height-170)
                     self.param_resize_radius.place(x=725, y=self.screen_height-170)
-                print(f"W= {self.selected_shape} {self.canvas.type(self.selected_shape)}")
                 self.resize_button.place(x=806, y=self.screen_height - 150)
+        self.fillParamResizeInput(self.selected_shape)
+
+
+    def fillParamResizeInput(self, shape):
+        self.param_resize_width.delete(0, tk.END)
+        self.param_resize_height.delete(0, tk.END)
+        self.param_resize_radius.delete(0, tk.END)
+        if shape:
+            shape_type = self.canvas.type(shape)
+            shape_coords = self.canvas.coords(shape)
+            # print(f"Selected Shape Type: {shape_type}")
+            # print(f"Selected Shape Coordinates: {shape_coords}")
+            if shape_type == "line" or shape_type == "rectangle":
+                width = int(shape_coords[2] - shape_coords[0])
+                height = int(shape_coords[3] - shape_coords[1])
+                self.param_resize_width.insert(0, str(width))
+                self.param_resize_height.insert(0, str(height))
+            elif shape_type == "oval":
+                x1, y1, x2, y2 = shape_coords
+                radius = int(max(abs(x2 - x1), abs(y2 - y1)) / 2)
+                self.param_resize_radius.insert(0, str(radius))
 
     def unmarkShape(self, shape):
         if shape:
             self.colorBorder(shape, "black")
-            if self.canvas.type(shape) == "line" or self.canvas.type(shape) == "rectangle":
-                self.label_resize_width.place_forget()
-                self.label_resize_height.place_forget()
-                self.param_resize_width.place_forget()
-                self.param_resize_height.place_forget()
-            elif self.canvas.type(shape) == "oval":
-                self.label_resize_radius.place_forget()
-                self.param_resize_radius.place_forget()
-                self.resize_button.place_forget()
+        self.label_resize_width.place_forget()
+        self.label_resize_height.place_forget()
+        self.param_resize_width.place_forget()
+        self.param_resize_height.place_forget()
+        self.label_resize_radius.place_forget()
+        self.param_resize_radius.place_forget()
+        self.resize_button.place_forget()
         return None
 
     def resizeSelectedShapeWithParameters(self):
