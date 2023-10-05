@@ -18,6 +18,7 @@ class DrawingApp:
         self.canvas.bind("<B1-Motion>", self.draw)
         self.canvas.bind("<ButtonRelease-1>", self.endDraw)
         self.canvas.bind("<Button-3>", self.markShape)
+        # self.canvas.bind("<Button-3>", self.fillInputs)
 
         self.start_x, self.start_y = None, None
         self.current_shape = None
@@ -126,6 +127,20 @@ class DrawingApp:
             else:
                 print("Selected shape is of an unknown type.")
 
+    # def fillInputs(self, event):
+    #     x, y = event.x, event.y
+    #     shapes = self.canvas.find_overlapping(x - 1, y - 1, x + 1, y + 1)
+    #     if shapes:
+    #         if self.selected_shape == shapes[-1]:
+    #             pass
+    #         else:
+    #             pass
+    #         self.selected_shape = shapes[-1]
+    #         shape_type = self.canvas.type(self.selected_shape)
+    #         shape_coords = self.canvas.coords(self.selected_shape)
+    #         print(f"Selected Shape Type: {shape_type}")
+    #         print(f"Selected Shape Coordinates: {shape_coords}")
+
     def markShape(self, event):
         self.unmarkShape(self.selected_shape)
         x, y = event.x, event.y
@@ -228,11 +243,11 @@ class DrawingApp:
         self.param_resize_width = tk.Entry(root)
         self.param_resize_radius = tk.Entry(root)
         # Set inputs x and y position
-        self.param_x.place(x=425, y=screen_height-190)
-        self.param_y.place(x=425, y=screen_height-170)
+        self.param_x.place(x=205, y=screen_height-190)
+        self.param_y.place(x=205, y=screen_height-170)
         # Button to trigger drawing with parameters
         self.draw_button = tk.Button(root, text="Draw with Parameters", command=self.drawWithParameters)
-        self.draw_button.place(x=425, y=screen_height-110)
+        self.draw_button.place(x=205, y=screen_height-110)
         # Create labels to discribe inputs
         self.label_x = tk.Label(root, text="X:")
         self.label_y = tk.Label(root, text="Y:")
@@ -243,8 +258,8 @@ class DrawingApp:
         self.label_resize_height = tk.Label(root, text="Resize Height:")
         self.label_resize_radius = tk.Label(root, text="Resize Radius:")
         # Set labels x and y position
-        self.label_x.place(x=409, y=screen_height - 190)
-        self.label_y.place(x=409, y=screen_height - 170)
+        self.label_x.place(x=189, y=screen_height - 190)
+        self.label_y.place(x=189, y=screen_height - 170)
         self.updateLabel(screen_height)
         # Save and load buttons
         self.save_button = tk.Button(root, text="Save", command=self.save)
@@ -274,17 +289,17 @@ class DrawingApp:
     def updateLineAndRectangleLabelAndInput(self, screen_height):
         self.label_width.config(text="Width:")
         self.label_height.config(text="Height:")
-        self.label_width.place(x=384, y=screen_height - 150)
-        self.label_height.place(x=380, y=screen_height - 130)
-        self.param_width.place(x=425, y=screen_height-150)
-        self.param_height.place(x=425, y=screen_height-130)
+        self.label_width.place(x=164, y=screen_height - 150)
+        self.label_height.place(x=160, y=screen_height - 130)
+        self.param_width.place(x=205, y=screen_height-150)
+        self.param_height.place(x=205, y=screen_height-130)
         self.label_radius.place_forget()
         self.param_radius.place_forget()
 
     def updateCircleLabelAndInput(self, screen_height):
         self.label_radius.config(text="Radius:")
-        self.param_radius.place(x=425, y=screen_height - 150)
-        self.label_radius.place(x=381, y=screen_height - 150)
+        self.param_radius.place(x=205, y=screen_height - 150)
+        self.label_radius.place(x=161, y=screen_height - 150)
         self.label_height.place_forget()
         self.param_height.place_forget()
         self.label_width.place_forget()
