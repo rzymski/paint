@@ -18,7 +18,6 @@ class DrawingApp:
         self.canvas.bind("<B1-Motion>", self.draw)
         self.canvas.bind("<ButtonRelease-1>", self.endDraw)
         self.canvas.bind("<Button-3>", self.markShape)
-        # self.canvas.bind("<Button-3>", self.fillInputs)
 
         self.start_x, self.start_y = None, None
         self.current_shape = None
@@ -34,7 +33,11 @@ class DrawingApp:
             self.current_shape = shapes[-1]
         elif shapes:
             #print("Kliknieto obiekt do przesuniecia. Przesuwa.")
-            self.unmarkShape(self.selected_shape)
+
+            #self.unmarkShape(self.selected_shape)
+            if self.selected_shape:
+                self.colorBorder(self.selected_shape, "black")
+
             self.selected_shape = shapes[-1]
             self.offset_x = x - self.canvas.coords(self.selected_shape)[0]
             self.offset_y = y - self.canvas.coords(self.selected_shape)[1]
@@ -81,11 +84,11 @@ class DrawingApp:
                 else:
                     new_width = new_height
                 self.canvas.coords(self.current_shape, center_x - new_width / 2, center_y - new_height / 2, center_x + new_width / 2, center_y + new_height / 2)
-            self.fillParamResizeInput(self.current_shape)
+            self.fillInputs(self.current_shape)
         elif self.selected_shape:
             #print("Przesun figure")
-            self.unmarkShape(None)
             self.canvas.coords(self.selected_shape, x - self.offset_x, y - self.offset_y, x - self.offset_x + self.canvas.coords(self.selected_shape)[2] - self.canvas.coords(self.selected_shape)[0], y - self.offset_y + self.canvas.coords(self.selected_shape)[3] - self.canvas.coords(self.selected_shape)[1])
+            self.fillInputs(self.selected_shape)
         elif self.current_shape:
             #print("Rysuj nowa figure")
             if self.draw_type.get() == "circle":
@@ -93,7 +96,7 @@ class DrawingApp:
                 self.canvas.coords(self.current_shape, self.start_x - radius, self.start_y - radius, self.start_x + radius, self.start_y + radius)
             else:
                 self.canvas.coords(self.current_shape, self.start_x, self.start_y, x, y)
-            self.fillParamResizeInput(self.current_shape)
+            self.fillInputs(self.current_shape)
 
     def endDraw(self, event):
         #print("Puszczono")
@@ -118,6 +121,12 @@ class DrawingApp:
         elif self.draw_type.get() == "circle":
             self.canvas.create_oval(x - radius, y - radius, x + radius, y + radius, width=3)
 
+    def changeWithParameters(self):
+        print(self.selected_shape)
+        self.canvas.delete(self.selected_shape)
+        self.drawWithParameters()
+        self.unmarkShape(None)
+
     def colorBorder(self, shape, color):
         if shape:
             if self.canvas.type(shape) == "line":
@@ -127,19 +136,6 @@ class DrawingApp:
             else:
                 print("Selected shape is of an unknown type.")
 
-    # def fillInputs(self, event):
-    #     x, y = event.x, event.y
-    #     shapes = self.canvas.find_overlapping(x - 1, y - 1, x + 1, y + 1)
-    #     if shapes:
-    #         if self.selected_shape == shapes[-1]:
-    #             pass
-    #         else:
-    #             pass
-    #         self.selected_shape = shapes[-1]
-    #         shape_type = self.canvas.type(self.selected_shape)
-    #         shape_coords = self.canvas.coords(self.selected_shape)
-    #         print(f"Selected Shape Type: {shape_type}")
-    #         print(f"Selected Shape Coordinates: {shape_coords}")
 
     def markShape(self, event):
         self.unmarkShape(self.selected_shape)
@@ -152,72 +148,48 @@ class DrawingApp:
                 self.selected_shape = self.unmarkShape(self.selected_shape)
                 self.selected_shape = shapes[-1]
                 self.colorBorder(self.selected_shape, "blue")
-                if self.canvas.type(self.selected_shape) == "line" or self.canvas.type(self.selected_shape) == "rectangle":
-                    self.label_resize_width.config(text="Resized Width:")
-                    self.label_resize_height.config(text="Resized Height:")
-                    self.label_resize_width.place(x=644, y=self.screen_height - 190)
-                    self.label_resize_height.place(x=640, y=self.screen_height - 170)
-                    self.param_resize_width.place(x=725, y=self.screen_height - 190)
-                    self.param_resize_height.place(x=725, y=self.screen_height - 170)
-                elif self.canvas.type(self.selected_shape) == "oval":
-                    self.label_resize_radius.config(text="Resized Radius:")
-                    self.label_resize_radius.place(x=640, y=self.screen_height-170)
-                    self.param_resize_radius.place(x=725, y=self.screen_height-170)
-                self.resize_button.place(x=806, y=self.screen_height - 150)
-        self.fillParamResizeInput(self.selected_shape)
+                self.fillInputs(self.selected_shape)
+                self.draw_button.place_forget()
+                self.change_button.place(x=205, y=self.screen_height - 110)
 
-
-    def fillParamResizeInput(self, shape):
-        self.param_resize_width.delete(0, tk.END)
-        self.param_resize_height.delete(0, tk.END)
-        self.param_resize_radius.delete(0, tk.END)
+    def fillInputs(self, shape):
+        self.clearInputs()
         if shape:
             shape_type = self.canvas.type(shape)
             shape_coords = self.canvas.coords(shape)
-            # print(f"Selected Shape Type: {shape_type}")
-            # print(f"Selected Shape Coordinates: {shape_coords}")
+            print(f"Selected Shape Type: {shape_type}")
+            print(f"Selected Shape Coordinates: {shape_coords}")
+            shape_type = 'circle' if shape_type == 'oval' else shape_type
+            self.draw_type.set(shape_type)
+            self.updateLabel(shape_type)
             if shape_type == "line" or shape_type == "rectangle":
                 width = int(shape_coords[2] - shape_coords[0])
                 height = int(shape_coords[3] - shape_coords[1])
-                self.param_resize_width.insert(0, str(width))
-                self.param_resize_height.insert(0, str(height))
-            elif shape_type == "oval":
+                self.param_x.insert(0, str(int(shape_coords[0])))
+                self.param_y.insert(0, str(int(shape_coords[1])))
+                self.param_width.insert(0, str(width))
+                self.param_height.insert(0, str(height))
+            elif shape_type == "circle":
                 x1, y1, x2, y2 = shape_coords
                 radius = int(max(abs(x2 - x1), abs(y2 - y1)) / 2)
-                self.param_resize_radius.insert(0, str(radius))
+                self.param_x.insert(0, str(int((shape_coords[2]+shape_coords[0])/2)))
+                self.param_y.insert(0, str(int((shape_coords[3]+shape_coords[1])/2)))
+                self.param_radius.insert(0, str(radius))
 
     def unmarkShape(self, shape):
         if shape:
             self.colorBorder(shape, "black")
-        self.label_resize_width.place_forget()
-        self.label_resize_height.place_forget()
-        self.param_resize_width.place_forget()
-        self.param_resize_height.place_forget()
-        self.label_resize_radius.place_forget()
-        self.param_resize_radius.place_forget()
-        self.resize_button.place_forget()
+        self.clearInputs()
+        self.change_button.place_forget()
+        self.draw_button.place(x=205, y=self.screen_height - 110)
         return None
 
-    def resizeSelectedShapeWithParameters(self):
-        if self.canvas.type(self.selected_shape) == "line" or self.canvas.type(self.selected_shape) == "rectangle":
-            width = int(self.param_resize_width.get())
-            height = int(self.param_resize_height.get())
-        elif self.canvas.type(self.selected_shape) == "oval":
-            radius = int(self.param_resize_radius.get())
-
-        if self.selected_shape:
-            if self.canvas.type(self.selected_shape) == "line":
-                self.canvas.coords(self.selected_shape, self.canvas.coords(self.selected_shape)[0], self.canvas.coords(self.selected_shape)[1], self.canvas.coords(self.selected_shape)[0] + width, self.canvas.coords(self.selected_shape)[1] + height)
-            elif self.canvas.type(self.selected_shape) == "rectangle":
-                self.canvas.coords(self.selected_shape, self.canvas.coords(self.selected_shape)[0], self.canvas.coords(self.selected_shape)[1], self.canvas.coords(self.selected_shape)[0] + width, self.canvas.coords(self.selected_shape)[1] + height)
-            elif self.canvas.type(self.selected_shape) == "oval":
-                x1, y1, x2, y2 = self.canvas.coords(self.selected_shape)
-                center_x = (x1 + x2) / 2
-                center_y = (y1 + y2) / 2
-                self.canvas.coords(self.selected_shape, center_x - radius, center_y - radius, center_x + radius, center_y + radius)
-        else:
-            print("No shape selected to resize.")
-        self.selected_shape = self.unmarkShape(self.selected_shape)
+    def clearInputs(self):
+        self.param_x.delete(0, tk.END)
+        self.param_y.delete(0, tk.END)
+        self.param_width.delete(0, tk.END)
+        self.param_height.delete(0, tk.END)
+        self.param_radius.delete(0, tk.END)
 
     def initLabelsAndButtons(self, screen_height):
         # Create radio buttons
@@ -239,48 +211,43 @@ class DrawingApp:
         self.param_width = tk.Entry(root)
         self.param_height = tk.Entry(root)
         self.param_radius = tk.Entry(root)
-        self.param_resize_height = tk.Entry(root)
-        self.param_resize_width = tk.Entry(root)
-        self.param_resize_radius = tk.Entry(root)
         # Set inputs x and y position
         self.param_x.place(x=205, y=screen_height-190)
         self.param_y.place(x=205, y=screen_height-170)
         # Button to trigger drawing with parameters
         self.draw_button = tk.Button(root, text="Draw with Parameters", command=self.drawWithParameters)
         self.draw_button.place(x=205, y=screen_height-110)
+        # Button to trigger change with parameters
+        self.change_button = tk.Button(root, text="Change with Parameters", command=self.changeWithParameters)
         # Create labels to discribe inputs
         self.label_x = tk.Label(root, text="X:")
         self.label_y = tk.Label(root, text="Y:")
         self.label_width = tk.Label(root, text="Width:")
         self.label_height = tk.Label(root, text="Height:")
         self.label_radius = tk.Label(root, text="Radius:")
-        self.label_resize_width = tk.Label(root, text="Resize Width:")
-        self.label_resize_height = tk.Label(root, text="Resize Height:")
-        self.label_resize_radius = tk.Label(root, text="Resize Radius:")
         # Set labels x and y position
         self.label_x.place(x=189, y=screen_height - 190)
         self.label_y.place(x=189, y=screen_height - 170)
-        self.updateLabel(screen_height)
+        self.updateLabel(self.draw_type.get())
         # Save and load buttons
         self.save_button = tk.Button(root, text="Save", command=self.save)
-        self.save_button.place(x=1025, y=screen_height - 170)
+        self.save_button.place(x=400, y=screen_height - 170)
         self.load_button = tk.Button(root, text="Load", command=self.load)
-        self.load_button.place(x=1025, y=screen_height - 140)
-        # Resize button
-        self.resize_button = tk.Button(root, text="Resize", command=self.resizeSelectedShapeWithParameters)
+        self.load_button.place(x=400, y=screen_height - 140)
 
     def onRadioButtonSelect(self):
         self.selected_value.set(self.draw_type.get())
-        self.updateLabel(self.screen_height)
+        self.updateLabel(self.draw_type.get())
 
-    def updateLabel(self, screen_height):
-        if self.draw_type.get() == 'line':
+    def updateLabel(self, value):
+        screen_height = self.screen_height
+        if value == 'line':
             self.label.config(text="Line drawing selected")
             self.updateLineAndRectangleLabelAndInput(screen_height)
-        elif self.draw_type.get() == 'rectangle':
+        elif value == 'rectangle':
             self.label.config(text="Rectangle drawing selected")
             self.updateLineAndRectangleLabelAndInput(screen_height)
-        elif self.draw_type.get() == 'circle':
+        elif value == 'circle':
             self.label.config(text="Circle drawing selected")
             self.updateCircleLabelAndInput(screen_height)
         else:
