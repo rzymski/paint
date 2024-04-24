@@ -1,6 +1,8 @@
 import tkinter as tk
 import pickle
 from tkinter.filedialog import asksaveasfilename, askopenfilename
+
+
 class DrawingApp:
     def __init__(self, root):
         self.root = root
@@ -32,11 +34,9 @@ class DrawingApp:
             self.current_shape = shapes[-1]
         elif shapes:
             #print("Kliknieto obiekt do przesuniecia. Przesuwa.")
-
             #self.unmarkShape(self.selected_shape)
             if self.selected_shape:
                 self.colorBorder(self.selected_shape, "black")
-
             self.selected_shape = shapes[-1]
             self.offset_x = x - self.canvas.coords(self.selected_shape)[0]
             self.offset_y = y - self.canvas.coords(self.selected_shape)[1]
